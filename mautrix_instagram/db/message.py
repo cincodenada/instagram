@@ -22,7 +22,7 @@ from attr import dataclass
 from mautrix.types import EventID, RoomID
 from mautrix.util.async_db import Database
 
-fake_db = Database("") if TYPE_CHECKING else None
+fake_db = Database.create("") if TYPE_CHECKING else None
 
 
 @dataclass
@@ -52,24 +52,22 @@ class Message:
 
     @classmethod
     async def get_by_mxid(cls, mxid: EventID, mx_room: RoomID) -> Message | None:
-        row = await cls.db.fetchrow(
+        q = (
             "SELECT mxid, mx_room, item_id, receiver, sender "
-            "FROM message WHERE mxid=$1 AND mx_room=$2",
-            mxid,
-            mx_room,
+            "FROM message WHERE mxid=$1 AND mx_room=$2"
         )
+        row = await cls.db.fetchrow(q, mxid, mx_room)
         if not row:
             return None
         return cls(**row)
 
     @classmethod
     async def get_by_item_id(cls, item_id: str, receiver: int) -> Message | None:
-        row = await cls.db.fetchrow(
+        q = (
             "SELECT mxid, mx_room, item_id, receiver, sender "
-            "FROM message WHERE item_id=$1 AND receiver=$2",
-            item_id,
-            receiver,
+            "FROM message WHERE item_id=$1 AND receiver=$2"
         )
+        row = await cls.db.fetchrow(q, item_id, receiver)
         if not row:
             return None
         return cls(**row)

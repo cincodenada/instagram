@@ -24,7 +24,7 @@ from mauigpapi.state import AndroidState
 from mautrix.types import RoomID, UserID
 from mautrix.util.async_db import Database
 
-fake_db = Database("") if TYPE_CHECKING else None
+fake_db = Database.create("") if TYPE_CHECKING else None
 
 
 @dataclass
@@ -37,18 +37,15 @@ class User:
     notice_room: RoomID | None
 
     async def insert(self) -> None:
-        q = 'INSERT INTO "user" (mxid, igpk, state, notice_room) ' "VALUES ($1, $2, $3, $4)"
+        q = 'INSERT INTO "user" (mxid, igpk, state, notice_room) VALUES ($1, $2, $3, $4)'
         await self.db.execute(
             q, self.mxid, self.igpk, self.state.json() if self.state else None, self.notice_room
         )
 
     async def update(self) -> None:
+        q = 'UPDATE "user" SET igpk=$2, state=$3, notice_room=$4 WHERE mxid=$1'
         await self.db.execute(
-            'UPDATE "user" SET igpk=$2, state=$3, notice_room=$4 ' "WHERE mxid=$1",
-            self.mxid,
-            self.igpk,
-            self.state.json() if self.state else None,
-            self.notice_room,
+            q, self.mxid, self.igpk, self.state.json() if self.state else None, self.notice_room
         )
 
     @classmethod

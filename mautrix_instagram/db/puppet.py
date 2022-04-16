@@ -24,7 +24,7 @@ import asyncpg
 from mautrix.types import ContentURI, SyncToken, UserID
 from mautrix.util.async_db import Database
 
-fake_db = Database("") if TYPE_CHECKING else None
+fake_db = Database.create("") if TYPE_CHECKING else None
 
 
 @dataclass
@@ -50,14 +50,9 @@ class Puppet:
     def _base_url_str(self) -> str | None:
         return str(self.base_url) if self.base_url else None
 
-    async def insert(self) -> None:
-        q = (
-            "INSERT INTO puppet (pk, name, username, photo_id, photo_mxc, name_set, avatar_set,"
-            "                    is_registered, custom_mxid, access_token, next_batch, base_url) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)"
-        )
-        await self.db.execute(
-            q,
+    @property
+    def _fields(self):
+        return (
             self.pk,
             self.name,
             self.username,
@@ -72,6 +67,14 @@ class Puppet:
             self._base_url_str,
         )
 
+    async def insert(self) -> None:
+        q = (
+            "INSERT INTO puppet (pk, name, username, photo_id, photo_mxc, name_set, avatar_set,"
+            "                    is_registered, custom_mxid, access_token, next_batch, base_url) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)"
+        )
+        await self.db.execute(q, *self._fields)
+
     async def update(self) -> None:
         q = (
             "UPDATE puppet SET name=$2, username=$3, photo_id=$4, photo_mxc=$5, name_set=$6,"
@@ -79,21 +82,7 @@ class Puppet:
             "                  next_batch=$11, base_url=$12 "
             "WHERE pk=$1"
         )
-        await self.db.execute(
-            q,
-            self.pk,
-            self.name,
-            self.username,
-            self.photo_id,
-            self.photo_mxc,
-            self.name_set,
-            self.avatar_set,
-            self.is_registered,
-            self.custom_mxid,
-            self.access_token,
-            self.next_batch,
-            self._base_url_str,
-        )
+        await self.db.execute(q, *self._fields)
 
     @classmethod
     def _from_row(cls, row: asyncpg.Record) -> Puppet:
