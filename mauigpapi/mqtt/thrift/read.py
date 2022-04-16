@@ -51,7 +51,7 @@ class ThriftReader(io.BytesIO):
         result = 0
         while True:
             byte = self._read_byte()
-            result |= (byte & 0x7f) << shift
+            result |= (byte & 0x7F) << shift
             if (byte & 0x80) == 0:
                 break
             shift += 7
@@ -61,9 +61,9 @@ class ThriftReader(io.BytesIO):
         byte = self._read_byte()
         if byte == 0:
             return TType.STOP
-        delta = (byte & 0xf0) >> 4
+        delta = (byte & 0xF0) >> 4
         if delta == 0:
             self.prev_field_id = self._from_zigzag(self.read_varint())
         else:
             self.prev_field_id += delta
-        return TType(byte & 0x0f)
+        return TType(byte & 0x0F)

@@ -13,22 +13,22 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Optional, Dict, Any
-import logging
+from typing import Any, Dict, Optional
 import asyncio
+import logging
 
-from mautrix.types import UserID, RoomID
 from mautrix.bridge import Bridge
+from mautrix.types import RoomID, UserID
 
+from . import commands
 from .config import Config
-from .db import upgrade_table, init as init_db
-from .user import User
+from .db import init as init_db, upgrade_table
+from .matrix import MatrixHandler
 from .portal import Portal
 from .puppet import Puppet
-from .matrix import MatrixHandler
-from .version import version, linkified_version
+from .user import User
+from .version import linkified_version, version
 from .web import ProvisioningAPI
-from . import commands
 
 
 class InstagramBridge(Bridge):
@@ -60,8 +60,9 @@ class InstagramBridge(Bridge):
     def prepare_bridge(self) -> None:
         super().prepare_bridge()
         cfg = self.config["bridge.provisioning"]
-        self.provisioning_api = ProvisioningAPI(shared_secret=cfg["shared_secret"],
-                                                device_seed=self.config["instagram.device_seed"])
+        self.provisioning_api = ProvisioningAPI(
+            shared_secret=cfg["shared_secret"], device_seed=self.config["instagram.device_seed"]
+        )
         self.az.app.add_subapp(cfg["prefix"], self.provisioning_api.app)
 
     async def start(self) -> None:
@@ -150,5 +151,6 @@ class InstagramBridge(Bridge):
             "Portal": Portal,
             "Puppet": Puppet,
         }
+
 
 InstagramBridge().run()

@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Any, Union, List, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 import io
 
 from .type import TType
@@ -45,7 +45,7 @@ class ThriftWriter(io.BytesIO):
 
     def _write_varint(self, val: int) -> None:
         while True:
-            byte = val & ~0x7f
+            byte = val & ~0x7F
             if byte == 0:
                 self._write_byte(val)
                 break
@@ -53,7 +53,7 @@ class ThriftWriter(io.BytesIO):
                 self._write_byte(0)
                 break
             else:
-                self._write_byte((val & 0xff) | 0x80)
+                self._write_byte((val & 0xFF) | 0x80)
                 val = val >> 7
 
     def _write_word(self, val: int) -> None:
@@ -75,14 +75,15 @@ class ThriftWriter(io.BytesIO):
             self._write_word(field_id)
         self.prev_field_id = field_id
 
-    def write_map(self, field_id: int, key_type: TType, value_type: TType, val: Dict[Any, Any]
-                  ) -> None:
+    def write_map(
+        self, field_id: int, key_type: TType, value_type: TType, val: Dict[Any, Any]
+    ) -> None:
         self.write_field_begin(field_id, TType.MAP)
         if not map:
             self._write_byte(0)
             return
         self._write_varint(len(val))
-        self._write_byte(((key_type.value & 0xf) << 4) | (value_type.value & 0xf))
+        self._write_byte(((key_type.value & 0xF) << 4) | (value_type.value & 0xF))
         for key, value in val.items():
             self.write_val(None, key_type, key)
             self.write_val(None, value_type, value)
@@ -115,10 +116,10 @@ class ThriftWriter(io.BytesIO):
 
     def write_list(self, field_id: int, item_type: TType, val: List[Any]) -> None:
         self.write_field_begin(field_id, TType.LIST)
-        if len(val) < 0x0f:
+        if len(val) < 0x0F:
             self._write_byte((len(val) << 4) | item_type.value)
         else:
-            self._write_byte(0xf0 | item_type.value)
+            self._write_byte(0xF0 | item_type.value)
             self._write_varint(len(val))
         for item in val:
             self.write_val(None, item_type, item)
@@ -157,8 +158,14 @@ class ThriftWriter(io.BytesIO):
                 continue
 
             start = len(self.getvalue())
-            if field_type in (TType.BOOL, TType.BYTE, TType.I16, TType.I32, TType.I64,
-                              TType.BINARY):
+            if field_type in (
+                TType.BOOL,
+                TType.BYTE,
+                TType.I16,
+                TType.I32,
+                TType.I64,
+                TType.BINARY,
+            ):
                 self.write_val(field_id, field_type, val)
             elif field_type in (TType.LIST, TType.SET):
                 self.write_list(field_id, inner_type, val)

@@ -23,12 +23,15 @@ from .type import TType
 TYPE_META = "net.maunium.instagram.thrift.type"
 
 if sys.version_info >= (3, 7):
+
     def _get_type_class(typ):
         try:
             return typ.__origin__
         except AttributeError:
             return None
+
 else:
+
     def _get_type_class(typ):
         try:
             return typ.__extra__
@@ -36,7 +39,7 @@ else:
             return None
 
 
-Subtype = Union[None, TType, Tuple['Subtype', 'Subtype']]
+Subtype = Union[None, TType, Tuple["Subtype", "Subtype"]]
 
 
 def _guess_type(python_type, name: str) -> Tuple[TType, Subtype]:
@@ -56,8 +59,10 @@ def _guess_type(python_type, name: str) -> Tuple[TType, Subtype]:
     if type_class == list:
         return TType.LIST, _guess_type(args[0], f"{name} item")
     elif type_class == dict:
-        return TType.MAP, (_guess_type(args[0], f"{name} key"),
-                           _guess_type(args[1], f"{name} value"))
+        return TType.MAP, (
+            _guess_type(args[0], f"{name} key"),
+            _guess_type(args[1], f"{name} value"),
+        )
     elif type_class == set:
         return TType.SET, _guess_type(args[0], f"{name} item")
 

@@ -18,7 +18,8 @@ from http.cookies import Morsel, SimpleCookie
 
 from aiohttp import CookieJar
 from yarl import URL
-from mautrix.types import Serializable, JSON
+
+from mautrix.types import JSON, Serializable
 
 from ..errors import IGCookieNotFoundError
 
@@ -36,11 +37,12 @@ class Cookies(Serializable):
             morsel.key: {
                 **{k: v for k, v in morsel.items() if v},
                 "value": morsel.value,
-            } for morsel in self.jar
+            }
+            for morsel in self.jar
         }
 
     @classmethod
-    def deserialize(cls, raw: JSON) -> 'Cookies':
+    def deserialize(cls, raw: JSON) -> "Cookies":
         cookie = SimpleCookie()
         for key, data in raw.items():
             cookie[key] = data.pop("value")
