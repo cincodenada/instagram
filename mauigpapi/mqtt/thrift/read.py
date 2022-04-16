@@ -13,7 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import List
+from __future__ import annotations
+
 import io
 
 from .type import TType
@@ -21,7 +22,7 @@ from .type import TType
 
 class ThriftReader(io.BytesIO):
     prev_field_id: int
-    stack: List[int]
+    stack: list[int]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

@@ -13,7 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Optional
+from __future__ import annotations
+
 import base64
 import io
 import json
@@ -32,8 +33,8 @@ class LoginAPI(BaseAndroidAPI):
     async def login(
         self,
         username: str,
-        password: Optional[str] = None,
-        encrypted_password: Optional[str] = None,
+        password: str | None = None,
+        encrypted_password: str | None = None,
     ) -> LoginResponse:
         if password:
             if encrypted_password:
@@ -94,7 +95,7 @@ class LoginAPI(BaseAndroidAPI):
             "/api/v1/accounts/two_factor_login/", data=req, response_type=LoginResponse
         )
 
-    async def logout(self, one_tap_app_login: Optional[bool] = None) -> LogoutResponse:
+    async def logout(self, one_tap_app_login: bool | None = None) -> LogoutResponse:
         req = {
             "guid": self.state.device.uuid,
             "phone_id": self.state.device.phone_id,

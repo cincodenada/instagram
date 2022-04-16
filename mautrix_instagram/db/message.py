@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, ClassVar, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 from attr import dataclass
 
@@ -49,7 +51,7 @@ class Message:
         await cls.db.execute("DELETE FROM message WHERE mx_room=$1", room_id)
 
     @classmethod
-    async def get_by_mxid(cls, mxid: EventID, mx_room: RoomID) -> Optional["Message"]:
+    async def get_by_mxid(cls, mxid: EventID, mx_room: RoomID) -> Message | None:
         row = await cls.db.fetchrow(
             "SELECT mxid, mx_room, item_id, receiver, sender "
             "FROM message WHERE mxid=$1 AND mx_room=$2",
@@ -61,7 +63,7 @@ class Message:
         return cls(**row)
 
     @classmethod
-    async def get_by_item_id(cls, item_id: str, receiver: int) -> Optional["Message"]:
+    async def get_by_item_id(cls, item_id: str, receiver: int) -> Message | None:
         row = await cls.db.fetchrow(
             "SELECT mxid, mx_room, item_id, receiver, sender "
             "FROM message WHERE item_id=$1 AND receiver=$2",

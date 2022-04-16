@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import AsyncIterable, Optional, Type, Union
+from __future__ import annotations
+
+from typing import AsyncIterable, Type
 
 from ..types import (
     CommandResponse,
@@ -31,8 +33,8 @@ from .base import BaseAndroidAPI, T
 class ThreadAPI(BaseAndroidAPI):
     async def get_inbox(
         self,
-        cursor: Optional[str] = None,
-        seq_id: Optional[str] = None,
+        cursor: str | None = None,
+        seq_id: str | None = None,
         message_limit: int = 10,
         limit: int = 20,
         pending: bool = False,
@@ -53,7 +55,7 @@ class ThreadAPI(BaseAndroidAPI):
         )
 
     async def iter_inbox(
-        self, start_at: Optional[DMInboxResponse] = None, message_limit: int = 10
+        self, start_at: DMInboxResponse | None = None, message_limit: int = 10
     ) -> AsyncIterable[Thread]:
         if start_at:
             cursor = start_at.inbox.oldest_cursor
@@ -76,10 +78,10 @@ class ThreadAPI(BaseAndroidAPI):
     async def get_thread(
         self,
         thread_id: str,
-        cursor: Optional[str] = None,
+        cursor: str | None = None,
         limit: int = 10,
         direction: str = "older",
-        seq_id: Optional[int] = None,
+        seq_id: int | None = None,
     ) -> DMThreadResponse:
         query = {
             "visual_message_return_type": "unseen",
@@ -93,7 +95,7 @@ class ThreadAPI(BaseAndroidAPI):
         )
 
     async def iter_thread(
-        self, thread_id: str, seq_id: Optional[int] = None, cursor: Optional[str] = None
+        self, thread_id: str, seq_id: int | None = None, cursor: str | None = None
     ) -> AsyncIterable[ThreadItem]:
         has_more = True
         while has_more:
@@ -115,7 +117,7 @@ class ThreadAPI(BaseAndroidAPI):
         item_type: str,
         response_type: Type[T],
         signed: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
         **kwargs,
     ) -> T:
         client_context = client_context or self.state.gen_client_context()
@@ -144,7 +146,7 @@ class ThreadAPI(BaseAndroidAPI):
         thread_id: str,
         item_type: ThreadItemType,
         signed: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
         **kwargs,
     ) -> CommandResponse:
         return await self._broadcast(
@@ -152,8 +154,8 @@ class ThreadAPI(BaseAndroidAPI):
         )
 
     async def broadcast_audio(
-        self, thread_id: str, is_direct: bool, client_context: Optional[str] = None, **kwargs
-    ) -> Union[ShareVoiceResponse, CommandResponse]:
+        self, thread_id: str, is_direct: bool, client_context: str | None = None, **kwargs
+    ) -> ShareVoiceResponse | CommandResponse:
         response_type = ShareVoiceResponse if is_direct else CommandResponse
         return await self._broadcast(
             thread_id, "share_voice", response_type, False, client_context, **kwargs

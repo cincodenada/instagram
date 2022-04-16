@@ -13,7 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, Tuple
+from __future__ import annotations
+
 import hashlib
 import hmac
 
@@ -30,17 +31,15 @@ from mauigpapi.state import AndroidState
 from mauigpapi.types import BaseResponseUser
 from mautrix.bridge.commands import HelpSection, command_handler
 
+from .. import user as u
 from .typehint import CommandEvent
-
-if TYPE_CHECKING:
-    from ..user import User
 
 SECTION_AUTH = HelpSection("Authentication", 10, "")
 
 
 async def get_login_state(
-    user: "User", username: str, seed: str
-) -> Tuple[AndroidAPI, AndroidState]:
+    user: u.User, username: str, seed: str
+) -> tuple[AndroidAPI, AndroidState]:
     if user.command_status and user.command_status["action"] == "Login":
         api: AndroidAPI = user.command_status["api"]
         state: AndroidState = user.command_status["state"]

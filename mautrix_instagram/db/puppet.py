@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, ClassVar, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 from attr import dataclass
 from yarl import URL
@@ -30,22 +32,22 @@ class Puppet:
     db: ClassVar[Database] = fake_db
 
     pk: int
-    name: Optional[str]
-    username: Optional[str]
-    photo_id: Optional[str]
-    photo_mxc: Optional[ContentURI]
+    name: str | None
+    username: str | None
+    photo_id: str | None
+    photo_mxc: ContentURI | None
     name_set: bool
     avatar_set: bool
 
     is_registered: bool
 
-    custom_mxid: Optional[UserID]
-    access_token: Optional[str]
-    next_batch: Optional[SyncToken]
-    base_url: Optional[URL]
+    custom_mxid: UserID | None
+    access_token: str | None
+    next_batch: SyncToken | None
+    base_url: URL | None
 
     @property
-    def _base_url_str(self) -> Optional[str]:
+    def _base_url_str(self) -> str | None:
         return str(self.base_url) if self.base_url else None
 
     async def insert(self) -> None:
@@ -94,14 +96,14 @@ class Puppet:
         )
 
     @classmethod
-    def _from_row(cls, row: asyncpg.Record) -> "Puppet":
+    def _from_row(cls, row: asyncpg.Record) -> Puppet:
         data = {**row}
         base_url_str = data.pop("base_url")
         base_url = URL(base_url_str) if base_url_str is not None else None
         return cls(base_url=base_url, **data)
 
     @classmethod
-    async def get_by_pk(cls, pk: int) -> Optional["Puppet"]:
+    async def get_by_pk(cls, pk: int) -> Puppet | None:
         q = (
             "SELECT pk, name, username, photo_id, photo_mxc, name_set, avatar_set, is_registered,"
             "       custom_mxid, access_token, next_batch, base_url "
@@ -113,7 +115,7 @@ class Puppet:
         return cls._from_row(row)
 
     @classmethod
-    async def get_by_custom_mxid(cls, mxid: UserID) -> Optional["Puppet"]:
+    async def get_by_custom_mxid(cls, mxid: UserID) -> Puppet | None:
         q = (
             "SELECT pk, name, username, photo_id, photo_mxc, name_set, avatar_set, is_registered,"
             "       custom_mxid, access_token, next_batch, base_url "
@@ -125,7 +127,7 @@ class Puppet:
         return cls._from_row(row)
 
     @classmethod
-    async def all_with_custom_mxid(cls) -> List["Puppet"]:
+    async def all_with_custom_mxid(cls) -> list[Puppet]:
         q = (
             "SELECT pk, name, username, photo_id, photo_mxc, name_set, avatar_set, is_registered,"
             "       custom_mxid, access_token, next_batch, base_url "

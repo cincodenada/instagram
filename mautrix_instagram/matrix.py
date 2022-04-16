@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, List, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from mautrix.bridge import BaseMatrixHandler
 from mautrix.types import (
@@ -49,7 +51,7 @@ class MatrixHandler(BaseMatrixHandler):
 
         super().__init__(bridge=bridge)
 
-    async def send_welcome_message(self, room_id: RoomID, inviter: "u.User") -> None:
+    async def send_welcome_message(self, room_id: RoomID, inviter: u.User) -> None:
         await super().send_welcome_message(room_id, inviter)
         if not inviter.notice_room:
             inviter.notice_room = room_id
@@ -114,8 +116,8 @@ class MatrixHandler(BaseMatrixHandler):
 
     async def handle_read_receipt(
         self,
-        user: "u.User",
-        portal: "po.Portal",
+        user: u.User,
+        portal: po.Portal,
         event_id: EventID,
         data: SingleReceiptEventContent,
     ) -> None:
@@ -126,7 +128,7 @@ class MatrixHandler(BaseMatrixHandler):
         await user.mqtt.mark_seen(portal.thread_id, message.item_id)
 
     @staticmethod
-    async def handle_typing(room_id: RoomID, typing: List[UserID]) -> None:
+    async def handle_typing(room_id: RoomID, typing: list[UserID]) -> None:
         portal = await po.Portal.get_by_mxid(room_id)
         if not portal:
             return
@@ -141,7 +143,7 @@ class MatrixHandler(BaseMatrixHandler):
             await self.handle_reaction(evt.room_id, evt.sender, evt.event_id, evt.content)
 
     async def handle_ephemeral_event(
-        self, evt: Union[ReceiptEvent, PresenceEvent, TypingEvent]
+        self, evt: ReceiptEvent | PresenceEvent | TypingEvent
     ) -> None:
         if evt.type == EventType.TYPING:
             await self.handle_typing(evt.room_id, evt.content.user_ids)

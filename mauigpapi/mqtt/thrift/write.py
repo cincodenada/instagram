@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Any, Dict, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 import io
 
 from .type import TType
@@ -21,7 +23,7 @@ from .type import TType
 
 class ThriftWriter(io.BytesIO):
     prev_field_id: int
-    stack: List[int]
+    stack: list[int]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -36,7 +38,7 @@ class ThriftWriter(io.BytesIO):
         if self.stack:
             self.prev_field_id = self.stack.pop()
 
-    def _write_byte(self, byte: Union[int, TType]) -> None:
+    def _write_byte(self, byte: int | TType) -> None:
         self.write(bytes([byte]))
 
     @staticmethod
@@ -76,7 +78,7 @@ class ThriftWriter(io.BytesIO):
         self.prev_field_id = field_id
 
     def write_map(
-        self, field_id: int, key_type: TType, value_type: TType, val: Dict[Any, Any]
+        self, field_id: int, key_type: TType, value_type: TType, val: dict[Any, Any]
     ) -> None:
         self.write_field_begin(field_id, TType.MAP)
         if not map:
@@ -88,7 +90,7 @@ class ThriftWriter(io.BytesIO):
             self.write_val(None, key_type, key)
             self.write_val(None, value_type, value)
 
-    def write_string_direct(self, val: Union[str, bytes]) -> None:
+    def write_string_direct(self, val: str | bytes) -> None:
         if isinstance(val, str):
             val = val.encode("utf-8")
         self._write_varint(len(val))
@@ -114,7 +116,7 @@ class ThriftWriter(io.BytesIO):
         self.write_field_begin(field_id, TType.I64)
         self._write_long(val)
 
-    def write_list(self, field_id: int, item_type: TType, val: List[Any]) -> None:
+    def write_list(self, field_id: int, item_type: TType, val: list[Any]) -> None:
         self.write_field_begin(field_id, TType.LIST)
         if len(val) < 0x0F:
             self._write_byte((len(val) << 4) | item_type.value)
@@ -128,7 +130,7 @@ class ThriftWriter(io.BytesIO):
         self.write_field_begin(field_id, TType.STRUCT)
         self._push_stack()
 
-    def write_val(self, field_id: Optional[int], ttype: TType, val: Any) -> None:
+    def write_val(self, field_id: int | None, ttype: TType, val: Any) -> None:
         if ttype == TType.BOOL:
             if field_id is None:
                 raise ValueError("booleans can only be in structs")

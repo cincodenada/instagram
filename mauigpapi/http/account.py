@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Optional, Type, TypeVar
+from __future__ import annotations
+
+from typing import Type, TypeVar
 import json
 
 from ..types import CurrentUserResponse
@@ -62,14 +64,14 @@ class AccountAPI(BaseAndroidAPI):
 
     async def edit_profile(
         self,
-        external_url: Optional[str] = None,
-        gender: Optional[str] = None,
-        phone_number: Optional[str] = None,
-        username: Optional[str] = None,
+        external_url: str | None = None,
+        gender: str | None = None,
+        phone_number: str | None = None,
+        username: str | None = None,
         # TODO should there be a last_name?
-        first_name: Optional[str] = None,
-        biography: Optional[str] = None,
-        email: Optional[str] = None,
+        first_name: str | None = None,
+        biography: str | None = None,
+        email: str | None = None,
     ) -> CurrentUserResponse:
         return await self.__command(
             "edit_profile",

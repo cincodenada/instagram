@@ -13,19 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Type,
-    TypeVar,
-    Union,
-)
+from __future__ import annotations
+
+from typing import Any, Awaitable, Callable, Iterable, Type, TypeVar
 from collections import defaultdict
 from socket import error as SocketError, socket
 from uuid import uuid4
@@ -89,24 +79,24 @@ class AndroidMQTT:
     _client: MQTToTClient
     log: TraceLogger
     state: AndroidState
-    _graphql_subs: Set[str]
-    _skywalker_subs: Set[str]
-    _iris_seq_id: Optional[int]
-    _iris_snapshot_at_ms: Optional[int]
-    _publish_waiters: Dict[int, asyncio.Future]
-    _response_waiters: Dict[RealtimeTopic, asyncio.Future]
-    _response_waiter_locks: Dict[RealtimeTopic, asyncio.Lock]
-    _message_response_waiters: Dict[str, asyncio.Future]
-    _disconnect_error: Optional[Exception]
-    _event_handlers: Dict[Type[T], List[Callable[[T], Awaitable[None]]]]
+    _graphql_subs: set[str]
+    _skywalker_subs: set[str]
+    _iris_seq_id: int | None
+    _iris_snapshot_at_ms: int | None
+    _publish_waiters: dict[int, asyncio.Future]
+    _response_waiters: dict[RealtimeTopic, asyncio.Future]
+    _response_waiter_locks: dict[RealtimeTopic, asyncio.Lock]
+    _message_response_waiters: dict[str, asyncio.Future]
+    _disconnect_error: Exception | None
+    _event_handlers: dict[Type[T], list[Callable[[T], Awaitable[None]]]]
 
     # region Initialization
 
     def __init__(
         self,
         state: AndroidState,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
-        log: Optional[TraceLogger] = None,
+        loop: asyncio.AbstractEventLoop | None = None,
+        log: TraceLogger | None = None,
     ) -> None:
         self._graphql_subs = set()
         self._skywalker_subs = set()
@@ -228,7 +218,7 @@ class AndroidMQTT:
         self._loop.remove_writer(sock)
 
     def _on_connect_handler(
-        self, client: MQTToTClient, _: Any, flags: Dict[str, Any], rc: int
+        self, client: MQTToTClient, _: Any, flags: dict[str, Any], rc: int
     ) -> None:
         if rc != 0:
             err = paho.mqtt.client.connack_string(rc)
@@ -363,9 +353,7 @@ class AndroidMQTT:
             else:
                 self.log.debug("Pubsub: double publish: %s", data.path)
 
-    def _parse_realtime_sub_item(
-        self, topic: Union[str, GraphQLQueryID], raw: dict
-    ) -> Iterable[Any]:
+    def _parse_realtime_sub_item(self, topic: str | GraphQLQueryID, raw: dict) -> Iterable[Any]:
         if topic == GraphQLQueryID.APP_PRESENCE:
             yield AppPresenceEventPayload.deserialize(raw).presence_event
         elif topic == GraphQLQueryID.ZERO_PROVISION:
@@ -469,8 +457,8 @@ class AndroidMQTT:
 
     async def listen(
         self,
-        graphql_subs: Set[str] = None,
-        skywalker_subs: Set[str] = None,
+        graphql_subs: set[str] | None = None,
+        skywalker_subs: set[str] | None = None,
         seq_id: int = None,
         snapshot_at_ms: int = None,
         retry_limit: int = 5,
@@ -537,7 +525,7 @@ class AndroidMQTT:
 
     # region Basic outgoing MQTT
 
-    def publish(self, topic: RealtimeTopic, payload: Union[str, bytes, dict]) -> asyncio.Future:
+    def publish(self, topic: RealtimeTopic, payload: str | bytes | dict) -> asyncio.Future:
         if isinstance(payload, dict):
             payload = json.dumps(payload)
         if isinstance(payload, str):
@@ -554,8 +542,8 @@ class AndroidMQTT:
         self,
         topic: RealtimeTopic,
         response: RealtimeTopic,
-        payload: Union[str, bytes, dict],
-        timeout: Optional[int] = None,
+        payload: str | bytes | dict,
+        timeout: int | None = None,
     ) -> MQTTMessage:
         async with self._response_waiter_locks[response]:
             fut = asyncio.Future()
@@ -579,19 +567,19 @@ class AndroidMQTT:
         if resp_dict["error_type"] and resp_dict["error_message"]:
             raise IrisSubscribeError(resp_dict["error_type"], resp_dict["error_message"])
 
-    def graphql_subscribe(self, subs: Set[str]) -> asyncio.Future:
+    def graphql_subscribe(self, subs: set[str]) -> asyncio.Future:
         self._graphql_subs |= subs
         return self.publish(RealtimeTopic.REALTIME_SUB, {"sub": list(subs)})
 
-    def graphql_unsubscribe(self, subs: Set[str]) -> asyncio.Future:
+    def graphql_unsubscribe(self, subs: set[str]) -> asyncio.Future:
         self._graphql_subs -= subs
         return self.publish(RealtimeTopic.REALTIME_SUB, {"unsub": list(subs)})
 
-    def skywalker_subscribe(self, subs: Set[str]) -> asyncio.Future:
+    def skywalker_subscribe(self, subs: set[str]) -> asyncio.Future:
         self._skywalker_subs |= subs
         return self.publish(RealtimeTopic.PUBSUB, {"sub": list(subs)})
 
-    def skywalker_unsubscribe(self, subs: Set[str]) -> asyncio.Future:
+    def skywalker_unsubscribe(self, subs: set[str]) -> asyncio.Future:
         self._skywalker_subs -= subs
         return self.publish(RealtimeTopic.PUBSUB, {"unsub": list(subs)})
 
@@ -610,9 +598,9 @@ class AndroidMQTT:
         self,
         thread_id: str,
         action: ThreadAction,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
         **kwargs: Any,
-    ) -> Optional[CommandResponse]:
+    ) -> CommandResponse | None:
         client_context = client_context or self.state.gen_client_context()
         req = {
             "thread_id": thread_id,
@@ -643,7 +631,7 @@ class AndroidMQTT:
         thread_id: str,
         item_type: ThreadItemType,
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
         **kwargs: Any,
     ) -> Awaitable[CommandResponse]:
         return self.send_command(
@@ -661,7 +649,7 @@ class AndroidMQTT:
         hashtag: str,
         text: str = "",
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -673,7 +661,7 @@ class AndroidMQTT:
         )
 
     def send_like(
-        self, thread_id: str, shh_mode: bool = False, client_context: Optional[str] = None
+        self, thread_id: str, shh_mode: bool = False, client_context: str | None = None
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -688,7 +676,7 @@ class AndroidMQTT:
         venue_id: str,
         text: str = "",
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -705,7 +693,7 @@ class AndroidMQTT:
         media_id: str,
         text: str = "",
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -722,7 +710,7 @@ class AndroidMQTT:
         user_id: str,
         text: str = "",
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -741,7 +729,7 @@ class AndroidMQTT:
         reaction_status: ReactionStatus = ReactionStatus.CREATED,
         target_item_type: ThreadItemType = ThreadItemType.TEXT,
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -763,7 +751,7 @@ class AndroidMQTT:
         media_id: str,
         text: str = "",
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -779,7 +767,7 @@ class AndroidMQTT:
         thread_id: str,
         text: str = "",
         shh_mode: bool = False,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_item(
             thread_id,
@@ -790,7 +778,7 @@ class AndroidMQTT:
         )
 
     def mark_seen(
-        self, thread_id: str, item_id: str, client_context: Optional[str] = None
+        self, thread_id: str, item_id: str, client_context: str | None = None
     ) -> Awaitable[None]:
         return self.send_command(
             thread_id,
@@ -800,7 +788,7 @@ class AndroidMQTT:
         )
 
     def mark_visual_item_seen(
-        self, thread_id: str, item_id: str, client_context: Optional[str] = None
+        self, thread_id: str, item_id: str, client_context: str | None = None
     ) -> Awaitable[CommandResponse]:
         return self.send_command(
             thread_id,
@@ -813,7 +801,7 @@ class AndroidMQTT:
         self,
         thread_id: str,
         activity_status: TypingStatus = TypingStatus.TEXT,
-        client_context: Optional[str] = None,
+        client_context: str | None = None,
     ) -> Awaitable[CommandResponse]:
         return self.send_command(
             thread_id,

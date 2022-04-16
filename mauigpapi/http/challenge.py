@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Union
+from __future__ import annotations
 
 from ..errors import IGChallengeWrongCodeError, IGResponseError
 from ..types import ChallengeStateResponse
@@ -64,7 +64,7 @@ class ChallengeAPI(BaseAndroidAPI):
             await self.std_http_post(self.__path, data=req, response_type=ChallengeStateResponse)
         )
 
-    async def challenge_send_security_code(self, code: Union[str, int]) -> ChallengeStateResponse:
+    async def challenge_send_security_code(self, code: str | int) -> ChallengeStateResponse:
         req = {
             "security_code": code,
             "_csrftoken": self.state.cookies.csrf_token,

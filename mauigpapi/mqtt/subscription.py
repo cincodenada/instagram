@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Any, Dict, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 from enum import Enum
 from uuid import uuid4
 import json
@@ -21,11 +23,11 @@ import json
 
 class SkywalkerSubscription:
     @staticmethod
-    def direct_sub(user_id: Union[str, int]) -> str:
+    def direct_sub(user_id: str | int) -> str:
         return f"ig/u/v1/{user_id}"
 
     @staticmethod
-    def live_sub(user_id: Union[str, int]) -> str:
+    def live_sub(user_id: str | int) -> str:
         return f"ig/live_notification_subscribe/{user_id}"
 
 
@@ -65,7 +67,7 @@ everclear_subscriptions = {
 class GraphQLSubscription:
     @staticmethod
     def _fmt(
-        query_id: GraphQLQueryID, input_params: Any, client_logged: Optional[bool] = None
+        query_id: GraphQLQueryID, input_params: Any, client_logged: bool | None = None
     ) -> str:
         params = {
             "input_data": input_params,
@@ -77,7 +79,7 @@ class GraphQLSubscription:
 
     @classmethod
     def app_presence(
-        cls, subscription_id: Optional[str] = None, client_logged: Optional[bool] = None
+        cls, subscription_id: str | None = None, client_logged: bool | None = None
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.APP_PRESENCE,
@@ -89,8 +91,8 @@ class GraphQLSubscription:
     def async_ad(
         cls,
         user_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.ASYNC_AD_SUB,
@@ -103,7 +105,7 @@ class GraphQLSubscription:
 
     @classmethod
     def client_config_update(
-        cls, subscription_id: Optional[str] = None, client_logged: Optional[bool] = None
+        cls, subscription_id: str | None = None, client_logged: bool | None = None
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.CLIENT_CONFIG_UPDATE,
@@ -113,7 +115,7 @@ class GraphQLSubscription:
 
     @classmethod
     def direct_status(
-        cls, subscription_id: Optional[str] = None, client_logged: Optional[bool] = None
+        cls, subscription_id: str | None = None, client_logged: bool | None = None
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.DIRECT_STATUS,
@@ -122,7 +124,7 @@ class GraphQLSubscription:
         )
 
     @classmethod
-    def direct_typing(cls, user_id: str, client_logged: Optional[bool] = None) -> str:
+    def direct_typing(cls, user_id: str, client_logged: bool | None = None) -> str:
         return cls._fmt(
             GraphQLQueryID.DIRECT_TYPING,
             input_params={"user_id": user_id},
@@ -134,8 +136,8 @@ class GraphQLSubscription:
         cls,
         broadcast_id: str,
         receiver_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.LIVE_WAVE,
@@ -151,8 +153,8 @@ class GraphQLSubscription:
     def interactivity_activate_question(
         cls,
         broadcast_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.INTERACTIVITY_ACTIVATE_QUESTION,
@@ -167,8 +169,8 @@ class GraphQLSubscription:
     def interactivity_realtime_question_submissions_status(
         cls,
         broadcast_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.INTERACTIVITY_REALTIME_QUESTION_SUBMISSION_STATUS,
@@ -183,8 +185,8 @@ class GraphQLSubscription:
     def interactivity(
         cls,
         broadcast_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.INTERACTIVITY_SUB,
@@ -199,8 +201,8 @@ class GraphQLSubscription:
     def live_realtime_comments(
         cls,
         broadcast_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.LIVE_REALTIME_COMMENTS,
@@ -215,8 +217,8 @@ class GraphQLSubscription:
     def live_realtime_typing_indicator(
         cls,
         broadcast_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.LIVE_TYPING_INDICATOR,
@@ -231,8 +233,8 @@ class GraphQLSubscription:
     def media_feedback(
         cls,
         feedback_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.MEDIA_FEEDBACK,
@@ -247,8 +249,8 @@ class GraphQLSubscription:
     def react_native_ota_update(
         cls,
         build_number: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.REACT_NATIVE_OTA,
@@ -263,8 +265,8 @@ class GraphQLSubscription:
     def video_call_co_watch_control(
         cls,
         video_call_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.VIDEO_CALL_CO_WATCH_CONTROL,
@@ -279,8 +281,8 @@ class GraphQLSubscription:
     def video_call_in_call_alert(
         cls,
         video_call_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.VIDEO_CALL_IN_ALERT,
@@ -295,8 +297,8 @@ class GraphQLSubscription:
     def video_call_prototype_publish(
         cls,
         video_call_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.VIDEO_CALL_PROTOTYPE_PUBLISH,
@@ -311,8 +313,8 @@ class GraphQLSubscription:
     def zero_provision(
         cls,
         device_id: str,
-        subscription_id: Optional[str] = None,
-        client_logged: Optional[bool] = None,
+        subscription_id: str | None = None,
+        client_logged: bool | None = None,
     ) -> str:
         return cls._fmt(
             GraphQLQueryID.ZERO_PROVISION,
@@ -324,7 +326,7 @@ class GraphQLSubscription:
         )
 
 
-_topic_map: Dict[str, str] = {
+_topic_map: dict[str, str] = {
     "/pp": "34",  # unknown
     "/ig_sub_iris": "134",
     "/ig_sub_iris_response": "135",
@@ -340,7 +342,7 @@ _topic_map: Dict[str, str] = {
     "179": "179",  # also unknown
 }
 
-_reverse_topic_map: Dict[str, str] = {value: key for key, value in _topic_map.items()}
+_reverse_topic_map: dict[str, str] = {value: key for key, value in _topic_map.items()}
 
 
 class RealtimeTopic(Enum):
@@ -363,5 +365,5 @@ class RealtimeTopic(Enum):
         return _topic_map[self.value]
 
     @staticmethod
-    def decode(val: str) -> "RealtimeTopic":
+    def decode(val: str) -> RealtimeTopic:
         return RealtimeTopic(_reverse_topic_map[val])

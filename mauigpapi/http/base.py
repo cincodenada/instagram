@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Any, Dict, Optional, Type, TypeVar, Union
+from __future__ import annotations
+
+from typing import Any, Type, TypeVar
 import json
 import logging
 import random
@@ -52,13 +54,13 @@ class BaseAndroidAPI:
     state: AndroidState
     log: TraceLogger
 
-    def __init__(self, state: AndroidState, log: Optional[TraceLogger] = None) -> None:
+    def __init__(self, state: AndroidState, log: TraceLogger | None = None) -> None:
         self.http = ClientSession(cookie_jar=state.cookies.jar)
         self.state = state
         self.log = log or logging.getLogger("mauigpapi.http")
 
     @staticmethod
-    def sign(req: Any, filter_nulls: bool = False) -> Dict[str, str]:
+    def sign(req: Any, filter_nulls: bool = False) -> dict[str, str]:
         if isinstance(req, Serializable):
             req = req.serialize()
         if isinstance(req, dict):
@@ -74,7 +76,7 @@ class BaseAndroidAPI:
         return {"signed_body": f"SIGNATURE.{req}"}
 
     @property
-    def _headers(self) -> Dict[str, str]:
+    def _headers(self) -> dict[str, str]:
         headers = {
             "x-ads-opt-out": str(int(self.state.session.ads_opt_out)),
             "x-device-id": self.state.device.uuid,
@@ -116,7 +118,7 @@ class BaseAndroidAPI:
         }
         return {k: v for k, v in headers.items() if v is not None}
 
-    def raw_http_get(self, url: Union[URL, str]):
+    def raw_http_get(self, url: URL | str):
         if isinstance(url, str):
             url = URL(url, encoded=True)
         return self.http.get(
@@ -130,12 +132,12 @@ class BaseAndroidAPI:
     async def std_http_post(
         self,
         path: str,
-        data: Optional[JSON] = None,
+        data: JSON = None,
         raw: bool = False,
         filter_nulls: bool = False,
-        headers: Optional[Dict[str, str]] = None,
-        query: Optional[Dict[str, str]] = None,
-        response_type: Optional[Type[T]] = JSON,
+        headers: dict[str, str] | None = None,
+        query: dict[str, str] | None = None,
+        response_type: Type[T] | None = JSON,
     ) -> T:
         headers = {**self._headers, **headers} if headers else self._headers
         if not raw:
@@ -156,9 +158,9 @@ class BaseAndroidAPI:
     async def std_http_get(
         self,
         path: str,
-        query: Optional[Dict[str, str]] = None,
-        headers: Optional[Dict[str, str]] = None,
-        response_type: Optional[Type[T]] = JSON,
+        query: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        response_type: Type[T] | None = JSON,
     ) -> T:
         headers = {**self._headers, **headers} if headers else self._headers
         query = {k: v for k, v in (query or {}).items() if v is not None}

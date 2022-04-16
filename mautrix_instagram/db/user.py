@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, ClassVar, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 from attr import dataclass
 import asyncpg
@@ -30,9 +32,9 @@ class User:
     db: ClassVar[Database] = fake_db
 
     mxid: UserID
-    igpk: Optional[int]
-    state: Optional[AndroidState]
-    notice_room: Optional[RoomID]
+    igpk: int | None
+    state: AndroidState | None
+    notice_room: RoomID | None
 
     async def insert(self) -> None:
         q = 'INSERT INTO "user" (mxid, igpk, state, notice_room) ' "VALUES ($1, $2, $3, $4)"
@@ -50,13 +52,13 @@ class User:
         )
 
     @classmethod
-    def _from_row(cls, row: asyncpg.Record) -> "User":
+    def _from_row(cls, row: asyncpg.Record) -> User:
         data = {**row}
         state_str = data.pop("state")
         return cls(state=AndroidState.parse_json(state_str) if state_str else None, **data)
 
     @classmethod
-    async def get_by_mxid(cls, mxid: UserID) -> Optional["User"]:
+    async def get_by_mxid(cls, mxid: UserID) -> User | None:
         q = 'SELECT mxid, igpk, state, notice_room FROM "user" WHERE mxid=$1'
         row = await cls.db.fetchrow(q, mxid)
         if not row:
@@ -64,7 +66,7 @@ class User:
         return cls._from_row(row)
 
     @classmethod
-    async def get_by_igpk(cls, igpk: int) -> Optional["User"]:
+    async def get_by_igpk(cls, igpk: int) -> User | None:
         q = 'SELECT mxid, igpk, state, notice_room FROM "user" WHERE igpk=$1'
         row = await cls.db.fetchrow(q, igpk)
         if not row:
@@ -72,7 +74,7 @@ class User:
         return cls._from_row(row)
 
     @classmethod
-    async def all_logged_in(cls) -> List["User"]:
+    async def all_logged_in(cls) -> list[User]:
         q = (
             "SELECT mxid, igpk, state, notice_room "
             'FROM "user" WHERE igpk IS NOT NULL AND state IS NOT NULL'

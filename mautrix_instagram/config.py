@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Any, List, NamedTuple
+from __future__ import annotations
+
+from typing import Any, NamedTuple
 import os
 
 from mautrix.bridge.config import BaseBridgeConfig
@@ -32,7 +34,7 @@ class Config(BaseBridgeConfig):
             return super().__getitem__(key)
 
     @property
-    def forbidden_defaults(self) -> List[ForbiddenDefault]:
+    def forbidden_defaults(self) -> list[ForbiddenDefault]:
         return [
             *super().forbidden_defaults,
             ForbiddenDefault("appservice.database", "postgres://username:password@hostname/db"),

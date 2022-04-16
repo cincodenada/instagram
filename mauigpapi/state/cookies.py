@@ -13,7 +13,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Optional
+from __future__ import annotations
+
 from http.cookies import Morsel, SimpleCookie
 
 from aiohttp import CookieJar
@@ -42,7 +43,7 @@ class Cookies(Serializable):
         }
 
     @classmethod
-    def deserialize(cls, raw: JSON) -> "Cookies":
+    def deserialize(cls, raw: JSON) -> Cookies:
         cookie = SimpleCookie()
         for key, data in raw.items():
             cookie[key] = data.pop("value")
@@ -70,7 +71,7 @@ class Cookies(Serializable):
         filtered = self.jar.filter_cookies(ig_url)
         return filtered.get(key)
 
-    def get_value(self, key: str) -> Optional[str]:
+    def get_value(self, key: str) -> str | None:
         cookie = self.get(key)
         return cookie.value if cookie else None
 

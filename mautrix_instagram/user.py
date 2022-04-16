@@ -13,16 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import (
-    TYPE_CHECKING,
-    AsyncGenerator,
-    AsyncIterable,
-    Awaitable,
-    Dict,
-    List,
-    Optional,
-    cast,
-)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterable, Awaitable, cast
 import asyncio
 import logging
 import time
@@ -79,33 +72,33 @@ BridgeState.human_readable_errors.update(
 
 class User(DBUser, BaseUser):
     ig_base_log: TraceLogger = logging.getLogger("mau.instagram")
-    _activity_indicator_ids: Dict[str, int] = {}
-    by_mxid: Dict[UserID, "User"] = {}
-    by_igpk: Dict[int, "User"] = {}
+    _activity_indicator_ids: dict[str, int] = {}
+    by_mxid: dict[UserID, User] = {}
+    by_igpk: dict[int, User] = {}
     config: Config
     az: AppService
     loop: asyncio.AbstractEventLoop
 
-    client: Optional[AndroidAPI]
-    mqtt: Optional[AndroidMQTT]
-    _listen_task: Optional[asyncio.Task] = None
+    client: AndroidAPI | None
+    mqtt: AndroidMQTT | None
+    _listen_task: asyncio.Task | None = None
 
     permission_level: str
-    username: Optional[str]
+    username: str | None
 
     _notice_room_lock: asyncio.Lock
     _notice_send_lock: asyncio.Lock
     _is_logged_in: bool
     _is_connected: bool
     shutdown: bool
-    remote_typing_status: Optional[TypingStatus]
+    remote_typing_status: TypingStatus | None
 
     def __init__(
         self,
         mxid: UserID,
-        igpk: Optional[int] = None,
-        state: Optional[AndroidState] = None,
-        notice_room: Optional[RoomID] = None,
+        igpk: int | None = None,
+        state: AndroidState | None = None,
+        notice_room: RoomID | None = None,
     ) -> None:
         super().__init__(mxid=mxid, igpk=igpk, state=state, notice_room=notice_room)
         BaseUser.__init__(self)
@@ -136,7 +129,7 @@ class User(DBUser, BaseUser):
     async def is_logged_in(self) -> bool:
         return bool(self.client) and self._is_logged_in
 
-    async def get_puppet(self) -> Optional[pu.Puppet]:
+    async def get_puppet(self) -> pu.Puppet | None:
         if not self.igpk:
             return None
         return await pu.Puppet.get_by_pk(self.igpk)
@@ -236,7 +229,7 @@ class User(DBUser, BaseUser):
         if self.username:
             state.remote_name = f"@{self.username}"
 
-    async def get_bridge_states(self) -> List[BridgeState]:
+    async def get_bridge_states(self) -> list[BridgeState]:
         if not self.state:
             return []
         state = BridgeState(state_event=BridgeStateEvent.UNKNOWN_ERROR)
@@ -249,12 +242,12 @@ class User(DBUser, BaseUser):
     async def send_bridge_notice(
         self,
         text: str,
-        edit: Optional[EventID] = None,
-        state_event: Optional[BridgeStateEvent] = None,
+        edit: EventID | None = None,
+        state_event: BridgeStateEvent | None = None,
         important: bool = False,
-        error_code: Optional[str] = None,
-        error_message: Optional[str] = None,
-    ) -> Optional[EventID]:
+        error_code: str | None = None,
+        error_message: str | None = None,
+    ) -> EventID | None:
         if state_event:
             await self.push_bridge_state(
                 state_event, error=error_code, message=error_message if error_code else text
@@ -299,7 +292,7 @@ class User(DBUser, BaseUser):
             self.log.exception("Exception while syncing")
             await self.push_bridge_state(BridgeStateEvent.UNKNOWN_ERROR)
 
-    async def get_direct_chats(self) -> Dict[UserID, List[RoomID]]:
+    async def get_direct_chats(self) -> dict[UserID, list[RoomID]]:
         return {
             pu.Puppet.get_mxid_from_id(portal.other_user_pk): [portal.mxid]
             for portal in await DBPortal.find_private_chats_of(self.igpk)
@@ -363,7 +356,7 @@ class User(DBUser, BaseUser):
             await self.start_listen(resp.seq_id, resp.snapshot_at_ms)
 
     async def start_listen(
-        self, seq_id: Optional[int] = None, snapshot_at_ms: Optional[int] = None
+        self, seq_id: int | None = None, snapshot_at_ms: int | None = None
     ) -> None:
         self.shutdown = False
         if not seq_id:
@@ -533,7 +526,7 @@ class User(DBUser, BaseUser):
 
     @classmethod
     @async_getter_lock
-    async def get_by_mxid(cls, mxid: UserID, *, create: bool = True) -> Optional["User"]:
+    async def get_by_mxid(cls, mxid: UserID, *, create: bool = True) -> User | None:
         # Never allow ghosts to be users
         if pu.Puppet.get_id_from_mxid(mxid):
             return None
@@ -557,7 +550,7 @@ class User(DBUser, BaseUser):
 
     @classmethod
     @async_getter_lock
-    async def get_by_igpk(cls, igpk: int) -> Optional["User"]:
+    async def get_by_igpk(cls, igpk: int) -> User | None:
         try:
             return cls.by_igpk[igpk]
         except KeyError:
@@ -571,7 +564,7 @@ class User(DBUser, BaseUser):
         return None
 
     @classmethod
-    async def all_logged_in(cls) -> AsyncGenerator["User", None]:
+    async def all_logged_in(cls) -> AsyncGenerator[User, None]:
         users = await super().all_logged_in()
         user: cls
         for index, user in enumerate(users):

@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, ClassVar, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 from attr import dataclass
 
@@ -66,7 +68,7 @@ class Reaction:
         await self.db.execute(q, self.ig_item_id, self.ig_receiver, self.ig_sender)
 
     @classmethod
-    async def get_by_mxid(cls, mxid: EventID, mx_room: RoomID) -> Optional["Reaction"]:
+    async def get_by_mxid(cls, mxid: EventID, mx_room: RoomID) -> Reaction | None:
         q = (
             "SELECT mxid, mx_room, ig_item_id, ig_receiver, ig_sender, reaction "
             "FROM reaction WHERE mxid=$1 AND mx_room=$2"
@@ -82,7 +84,7 @@ class Reaction:
         ig_item_id: str,
         ig_receiver: int,
         ig_sender: int,
-    ) -> Optional["Reaction"]:
+    ) -> Reaction | None:
         q = (
             "SELECT mxid, mx_room, ig_item_id, ig_receiver, ig_sender, reaction "
             "FROM reaction WHERE ig_item_id=$1 AND ig_sender=$2 AND ig_receiver=$3"
@@ -98,7 +100,7 @@ class Reaction:
         return await cls.db.fetchval(q, ig_item_id, ig_receiver)
 
     @classmethod
-    async def get_all_by_item_id(cls, ig_item_id: str, ig_receiver: int) -> List["Reaction"]:
+    async def get_all_by_item_id(cls, ig_item_id: str, ig_receiver: int) -> list[Reaction]:
         q = (
             "SELECT mxid, mx_room, ig_item_id, ig_receiver, ig_sender, reaction "
             "FROM reaction WHERE ig_item_id=$1 AND ig_receiver=$2"

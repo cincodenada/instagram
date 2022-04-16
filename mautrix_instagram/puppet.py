@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterable, Awaitable, Dict, Optional, cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterable, Awaitable, cast
 import os.path
 
 from yarl import URL
@@ -33,8 +35,8 @@ if TYPE_CHECKING:
 
 
 class Puppet(DBPuppet, BasePuppet):
-    by_pk: Dict[int, "Puppet"] = {}
-    by_custom_mxid: Dict[UserID, "Puppet"] = {}
+    by_pk: dict[int, Puppet] = {}
+    by_custom_mxid: dict[UserID, Puppet] = {}
     hs_domain: str
     mxid_template: SimpleTemplate[int]
 
@@ -46,17 +48,17 @@ class Puppet(DBPuppet, BasePuppet):
     def __init__(
         self,
         pk: int,
-        name: Optional[str] = None,
-        username: Optional[str] = None,
-        photo_id: Optional[str] = None,
-        photo_mxc: Optional[ContentURI] = None,
+        name: str | None = None,
+        username: str | None = None,
+        photo_id: str | None = None,
+        photo_mxc: ContentURI | None = None,
         name_set: bool = False,
         avatar_set: bool = False,
         is_registered: bool = False,
-        custom_mxid: Optional[UserID] = None,
-        access_token: Optional[str] = None,
-        next_batch: Optional[SyncToken] = None,
-        base_url: Optional[URL] = None,
+        custom_mxid: UserID | None = None,
+        access_token: str | None = None,
+        next_batch: SyncToken | None = None,
+        base_url: URL | None = None,
     ) -> None:
         super().__init__(
             pk=pk,
@@ -109,19 +111,19 @@ class Puppet(DBPuppet, BasePuppet):
     def igpk(self) -> int:
         return self.pk
 
-    def intent_for(self, portal: "p.Portal") -> IntentAPI:
+    def intent_for(self, portal: p.Portal) -> IntentAPI:
         if portal.other_user_pk == self.pk:
             return self.default_mxid_intent
         return self.intent
 
-    def need_backfill_invite(self, portal: "p.Portal") -> bool:
+    def need_backfill_invite(self, portal: p.Portal) -> bool:
         return (
             portal.other_user_pk != self.pk
             and (self.is_real_user or portal.is_direct)
             and self.config["bridge.backfill.invite_own_puppet"]
         )
 
-    async def update_info(self, info: BaseResponseUser, source: "u.User") -> None:
+    async def update_info(self, info: BaseResponseUser, source: u.User) -> None:
         update = False
         update = await self._update_name(info) or update
         update = await self._update_avatar(info, source) or update
@@ -147,7 +149,7 @@ class Puppet(DBPuppet, BasePuppet):
             return True
         return False
 
-    async def _update_avatar(self, info: BaseResponseUser, source: "u.User") -> bool:
+    async def _update_avatar(self, info: BaseResponseUser, source: u.User) -> bool:
         pic_id = (
             f"id_{info.profile_pic_id}.jpg"
             if info.profile_pic_id
@@ -189,7 +191,7 @@ class Puppet(DBPuppet, BasePuppet):
         await self.update()
 
     @classmethod
-    async def get_by_mxid(cls, mxid: UserID, create: bool = True) -> Optional["Puppet"]:
+    async def get_by_mxid(cls, mxid: UserID, create: bool = True) -> Puppet | None:
         pk = cls.get_id_from_mxid(mxid)
         if pk:
             return await cls.get_by_pk(pk, create=create)
@@ -197,7 +199,7 @@ class Puppet(DBPuppet, BasePuppet):
 
     @classmethod
     @async_getter_lock
-    async def get_by_custom_mxid(cls, mxid: UserID) -> Optional["Puppet"]:
+    async def get_by_custom_mxid(cls, mxid: UserID) -> Puppet | None:
         try:
             return cls.by_custom_mxid[mxid]
         except KeyError:
@@ -211,7 +213,7 @@ class Puppet(DBPuppet, BasePuppet):
         return None
 
     @classmethod
-    def get_id_from_mxid(cls, mxid: UserID) -> Optional[int]:
+    def get_id_from_mxid(cls, mxid: UserID) -> int | None:
         return cls.mxid_template.parse(mxid)
 
     @classmethod
@@ -220,7 +222,7 @@ class Puppet(DBPuppet, BasePuppet):
 
     @classmethod
     @async_getter_lock
-    async def get_by_pk(cls, pk: int, *, create: bool = True) -> Optional["Puppet"]:
+    async def get_by_pk(cls, pk: int, *, create: bool = True) -> Puppet | None:
         try:
             return cls.by_pk[pk]
         except KeyError:
@@ -240,7 +242,7 @@ class Puppet(DBPuppet, BasePuppet):
         return None
 
     @classmethod
-    async def all_with_custom_mxid(cls) -> AsyncGenerator["Puppet", None]:
+    async def all_with_custom_mxid(cls) -> AsyncGenerator[Puppet, None]:
         puppets = await super().all_with_custom_mxid()
         puppet: cls
         for index, puppet in enumerate(puppets):

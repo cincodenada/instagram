@@ -13,7 +13,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from typing import TYPE_CHECKING, ClassVar, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
 
 from attr import dataclass
 import asyncpg
@@ -30,14 +32,14 @@ class Portal:
 
     thread_id: str
     receiver: int
-    other_user_pk: Optional[int]
-    mxid: Optional[RoomID]
-    name: Optional[str]
-    avatar_url: Optional[ContentURI]
+    other_user_pk: int | None
+    mxid: RoomID | None
+    name: str | None
+    avatar_url: ContentURI | None
     encrypted: bool
     name_set: bool
     avatar_set: bool
-    relay_user_id: Optional[UserID]
+    relay_user_id: UserID | None
 
     async def insert(self) -> None:
         q = (
@@ -80,11 +82,11 @@ class Portal:
         )
 
     @classmethod
-    def _from_row(cls, row: asyncpg.Record) -> "Portal":
+    def _from_row(cls, row: asyncpg.Record) -> Portal:
         return cls(**row)
 
     @classmethod
-    async def get_by_mxid(cls, mxid: RoomID) -> Optional["Portal"]:
+    async def get_by_mxid(cls, mxid: RoomID) -> Portal | None:
         q = (
             "SELECT thread_id, receiver, other_user_pk, mxid, name, avatar_url, encrypted, "
             "       name_set, avatar_set, relay_user_id "
@@ -98,7 +100,7 @@ class Portal:
     @classmethod
     async def get_by_thread_id(
         cls, thread_id: str, receiver: int, rec_must_match: bool = True
-    ) -> Optional["Portal"]:
+    ) -> Portal | None:
         q = (
             "SELECT thread_id, receiver, other_user_pk, mxid, name, avatar_url, encrypted, "
             "       name_set, avatar_set, relay_user_id "
@@ -116,7 +118,7 @@ class Portal:
         return cls._from_row(row)
 
     @classmethod
-    async def find_private_chats_of(cls, receiver: int) -> List["Portal"]:
+    async def find_private_chats_of(cls, receiver: int) -> list[Portal]:
         q = (
             "SELECT thread_id, receiver, other_user_pk, mxid, name, avatar_url, encrypted, "
             "       name_set, avatar_set, relay_user_id "
@@ -126,7 +128,7 @@ class Portal:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    async def find_private_chats_with(cls, other_user: int) -> List["Portal"]:
+    async def find_private_chats_with(cls, other_user: int) -> list[Portal]:
         q = (
             "SELECT thread_id, receiver, other_user_pk, mxid, name, avatar_url, encrypted, "
             "       name_set, avatar_set, relay_user_id "
@@ -136,7 +138,7 @@ class Portal:
         return [cls._from_row(row) for row in rows]
 
     @classmethod
-    async def all_with_room(cls) -> List["Portal"]:
+    async def all_with_room(cls) -> list[Portal]:
         q = (
             "SELECT thread_id, receiver, other_user_pk, mxid, name, avatar_url, encrypted, "
             "       name_set, avatar_set, relay_user_id "
