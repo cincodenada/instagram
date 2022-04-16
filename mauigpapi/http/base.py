@@ -48,6 +48,12 @@ from ..state import AndroidState
 T = TypeVar("T")
 
 
+def remove_nulls(d: dict) -> dict:
+    return {
+        k: remove_nulls(v) if isinstance(v, dict) else v for k, v in d.items() if v is not None
+    }
+
+
 class BaseAndroidAPI:
     url = URL("https://i.instagram.com")
     http: ClientSession
@@ -64,14 +70,6 @@ class BaseAndroidAPI:
         if isinstance(req, Serializable):
             req = req.serialize()
         if isinstance(req, dict):
-
-            def remove_nulls(d: dict) -> dict:
-                return {
-                    k: remove_nulls(v) if isinstance(v, dict) else v
-                    for k, v in d.items()
-                    if v is not None
-                }
-
             req = json.dumps(remove_nulls(req) if filter_nulls else req)
         return {"signed_body": f"SIGNATURE.{req}"}
 

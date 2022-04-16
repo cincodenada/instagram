@@ -690,12 +690,6 @@ class Portal(DBPortal, BasePortal):
         content = await self._reupload_instagram_file(
             source, url, MessageType.AUDIO, info, intent, convert_to_ogg
         )
-        content["org.matrix.msc1767.file"] = {
-            "url": content.url,
-            "name": content.body,
-            **(content.file.serialize() if content.file else {}),
-            **(content.info.serialize() if content.info else {}),
-        }
         content["org.matrix.msc1767.audio"] = {
             "duration": media.media.audio.duration,
             "waveform": waveform,
@@ -712,7 +706,7 @@ class Portal(DBPortal, BasePortal):
         intent: IntentAPI,
         convert_fn: Callable[[bytes, str], Awaitable[tuple[bytes, str]]] | None = None,
     ) -> MediaMessageEventContent:
-        async with await source.client.raw_http_get(url) as resp:
+        async with source.client.raw_http_get(url) as resp:
             try:
                 length = int(resp.headers["Content-Length"])
             except KeyError:
@@ -1401,16 +1395,6 @@ class Portal(DBPortal, BasePortal):
                 await self.backfill(source, is_initial=False)
         await self._update_read_receipts(info.last_seen_at)
 
-        # TODO
-        # up = DBUserPortal.get(source.fbid, self.fbid, self.fb_receiver)
-        # if not up:
-        #     in_community = await source._community_helper.add_room(source._community_id, self.mxid)
-        #     DBUserPortal(user=source.fbid, portal=self.fbid, portal_receiver=self.fb_receiver,
-        #                  in_community=in_community).insert()
-        # elif not up.in_community:
-        #     in_community = await source._community_helper.add_room(source._community_id, self.mxid)
-        #     up.edit(in_community=in_community)
-
     async def _create_matrix_room(self, source: u.User, info: Thread) -> RoomID | None:
         if self.mxid:
             await self.update_matrix_room(source, info)
@@ -1424,8 +1408,8 @@ class Portal(DBPortal, BasePortal):
                 "state_key": self.bridge_info_state_key,
                 "content": self.bridge_info,
             },
+            # TODO remove this once https://github.com/matrix-org/matrix-doc/pull/2346 is in spec
             {
-                # TODO remove this once https://github.com/matrix-org/matrix-doc/pull/2346 is in spec
                 "type": str(StateHalfShotBridge),
                 "state_key": self.bridge_info_state_key,
                 "content": self.bridge_info,
@@ -1493,11 +1477,6 @@ class Portal(DBPortal, BasePortal):
                     )
 
             await self._update_participants(info.users, source)
-
-            # TODO
-            # in_community = await source._community_helper.add_room(source._community_id, self.mxid)
-            # DBUserPortal(user=source.fbid, portal=self.fbid, portal_receiver=self.fb_receiver,
-            #              in_community=in_community).upsert()
 
             try:
                 await self.backfill(source, is_initial=True)
