@@ -1,5 +1,5 @@
 # mautrix-instagram - A Matrix-Instagram puppeting bridge.
-# Copyright (C) 2020 Tulir Asokan
+# Copyright (C) 2022 Tulir Asokan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -57,7 +57,7 @@ class MatrixHandler(BaseMatrixHandler):
             inviter.notice_room = room_id
             await inviter.update()
             await self.az.intent.send_notice(
-                room_id, "This room has been marked as your " "Instagram bridge notice room."
+                room_id, "This room has been marked as your Instagram bridge notice room."
             )
 
     async def handle_leave(self, room_id: RoomID, user_id: UserID, event_id: EventID) -> None:

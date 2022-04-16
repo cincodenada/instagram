@@ -1,5 +1,5 @@
-# mautrix-twitter - A Matrix-Twitter DM puppeting bridge
-# Copyright (C) 2020 Tulir Asokan
+# mautrix-instagram - A Matrix-Instagram puppeting bridge.
+# Copyright (C) 2022 Tulir Asokan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -190,7 +190,7 @@ async def _post_login(evt: CommandEvent, state: AndroidState, user: BaseResponse
 @command_handler(
     needs_auth=True,
     help_section=SECTION_AUTH,
-    help_text="Disconnect the bridge from" "your Instagram account",
+    help_text="Disconnect the bridge from your Instagram account",
 )
 async def logout(evt: CommandEvent) -> None:
     await evt.sender.logout()

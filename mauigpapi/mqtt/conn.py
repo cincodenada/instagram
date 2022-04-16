@@ -1,5 +1,5 @@
 # mautrix-instagram - A Matrix-Instagram puppeting bridge.
-# Copyright (C) 2020 Tulir Asokan
+# Copyright (C) 2022 Tulir Asokan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,11 +18,9 @@ from __future__ import annotations
 from typing import Any, Awaitable, Callable, Iterable, Type, TypeVar
 from collections import defaultdict
 from socket import error as SocketError, socket
-from uuid import uuid4
 import asyncio
 import json
 import logging
-import random
 import re
 import time
 import urllib.request
@@ -550,7 +548,7 @@ class AndroidMQTT:
             self._response_waiters[response] = fut
             await self.publish(topic, payload)
             self.log.trace(
-                f"Request published to {topic.value}, " f"waiting for response {response.name}"
+                f"Request published to {topic.value}, waiting for response {response.name}"
             )
             return await asyncio.wait_for(fut, timeout)
 

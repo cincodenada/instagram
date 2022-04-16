@@ -37,7 +37,6 @@ from mauigpapi.types import (
     ReelMediaShareItem,
     ReelShareType,
     RegularMediaItem,
-    ShareVoiceResponse,
     Thread,
     ThreadItem,
     ThreadItemType,
@@ -463,8 +462,8 @@ class Portal(DBPortal, BasePortal):
                 ).insert()
             except asyncpg.UniqueViolationError as e:
                 self.log.warning(
-                    f"Error while persisting {event_id} "
-                    f"({resp.payload.client_context}) -> {resp.payload.item_id}: {e}"
+                    f"Error while persisting {event_id} ({resp.payload.client_context}) "
+                    f"-> {resp.payload.item_id}: {e}"
                 )
             self._reqid_dedup.remove(request_id)
             self.log.debug(
@@ -635,7 +634,7 @@ class Portal(DBPortal, BasePortal):
             self.log.info(f"{user.mxid} left private chat portal with {self.other_user_pk}")
             if user.igpk == self.receiver:
                 self.log.info(
-                    f"{user.mxid} was the recipient of this portal. " "Cleaning up and deleting..."
+                    f"{user.mxid} was the recipient of this portal. Cleaning up and deleting..."
                 )
                 await self.cleanup_and_delete()
         else:
@@ -725,7 +724,7 @@ class Portal(DBPortal, BasePortal):
                 length = 0
             if length > self.matrix.media_config.upload_size:
                 self.log.debug(
-                    f"{url} was too large ({length} " f"> {self.matrix.media_config.upload_size})"
+                    f"{url} was too large ({length} > {self.matrix.media_config.upload_size})"
                 )
                 raise ValueError("Attachment not available: too large")
             data = await resp.read()
@@ -1473,9 +1472,7 @@ class Portal(DBPortal, BasePortal):
                 try:
                     await self.az.intent.ensure_joined(self.mxid)
                 except Exception:
-                    self.log.warning(
-                        "Failed to add bridge bot " f"to new private chat {self.mxid}"
-                    )
+                    self.log.warning(f"Failed to add bridge bot to new private chat {self.mxid}")
 
             await self.update()
             self.log.debug(f"Matrix room created: {self.mxid}")
