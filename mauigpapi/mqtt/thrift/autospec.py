@@ -14,29 +14,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Tuple, Union
-import sys
 
 import attr
 
 from .type import TType
 
-TYPE_META = "net.maunium.instagram.thrift.type"
+TYPE_META = "fi.mau.instagram.thrift.type"
 
-if sys.version_info >= (3, 7):
 
-    def _get_type_class(typ):
-        try:
-            return typ.__origin__
-        except AttributeError:
-            return None
-
-else:
-
-    def _get_type_class(typ):
-        try:
-            return typ.__extra__
-        except AttributeError:
-            return None
+def _get_type_class(typ):
+    try:
+        return typ.__origin__
+    except AttributeError:
+        return None
 
 
 Subtype = Union[None, TType, Tuple["Subtype", "Subtype"]]
